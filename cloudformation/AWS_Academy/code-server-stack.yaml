@@ -30,13 +30,16 @@ Parameters:
   InstanceType:
     Description: WebServer EC2 instance type
     Type: String
-    Default: t2.xlarge
+    Default: t3.small
     ConstraintDescription: must be a valid EC2 instance type.
   LatestAmiId:
     Description: latest image id for ubuntu
     Type: "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>" 
-    # Default: "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64"
     Default: "/aws/service/canonical/ubuntu/server/22.04/stable/current/amd64/hvm/ebs-gp2/ami-id" 
+  InstanceProfileName:
+    Type: String
+    Default: LabInstanceProfile
+    Description: Nombre del Instance Profile existente
   InternetCidrBlock:
     Type: String
     Description: UserCidrBlock
@@ -108,28 +111,7 @@ Resources:
           - GroupId
       IpProtocol: -1
       CidrIp: !Ref InternetCidrBlock
-#------------------------------------------------------
-# Role and Instance Profile
-#------------------------------------------------------
-  VSCodeServerIAMRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Action:
-              - sts:AssumeRole
-            Effect: Allow
-            Principal:
-              Service:
-                - ec2.amazonaws.com
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
-  InstanceProfile:
-    Type: AWS::IAM::InstanceProfile
-    Properties:
-      Roles:
-        - Ref: VSCodeServerIAMRole
+
 #------------------------------------------------------
 # EC2 Instance for VSCode Server
 #------------------------------------------------------
@@ -143,7 +125,7 @@ Resources:
     Properties:
       ImageId: !Ref LatestAmiId
       InstanceType: !Ref InstanceType
-      IamInstanceProfile: !Ref InstanceProfile
+      IamInstanceProfile: !Ref InstanceProfileName
       Tags:
         - Key: Name
           Value: VSCodeServer 
@@ -259,10 +241,6 @@ Outputs:
     Value: !GetAtt VSCodeServer.PrivateIp
     Export:
       Name: !Sub ${AWS::StackName}-code-server-private-ip
-  VSCodeServerRoleARN:
-    Value: !GetAtt VSCodeServerIAMRole.Arn
-    Export:
-      Name: !Sub ${AWS::StackName}-code-server-role-arn
   VSCodeServerInstanceId:
     Value: !Ref VSCodeServer
     Export:
