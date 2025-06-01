@@ -1,0 +1,18 @@
+services:
+  code-server:
+    image: yosoyfunes/code-server-devbox:v1
+    container_name: code-server
+    ports:
+      - "8080:8080"
+    environment:
+      - PASSWORD=devcontainer
+    volumes:
+      - code-server-data:/home/vscode/.local/share/code-server
+      - /var/run/docker.sock:/var/run/docker.sock
+      - .:/workspaces/project
+    working_dir: /workspaces/project
+    command: code-server /workspaces/project
+    restart: unless-stopped
+
+volumes:
+  code-server-data:
