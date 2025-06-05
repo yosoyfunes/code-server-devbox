@@ -201,8 +201,18 @@ fi
 if ! command -v localstack &> /dev/null; then
   log_error "LocalStack is not installed or is outdated, installing..."
   pip3 install localstack awscli-local
+  log "LocalStack installation completed: $(localstack --version 2>&1)"
 else
   log "Terragrunt already installed"
+fi
+
+# Install Sceptre CLI if not already installed
+if ! command -v sceptre &> /dev/null; then
+  log_error "Sceptre is not installed or is outdated, installing..."
+  pip3 install sceptre
+  log "Sceptre installation completed: $(sceptre --version 2>&1)"
+else
+  log "Sceptre already installed"
 fi
 
 # Update permissions
