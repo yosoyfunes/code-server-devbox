@@ -30,7 +30,7 @@ Parameters:
   InstanceType:
     Description: WebServer EC2 instance type
     Type: String
-    Default: t2.xlarge
+    Default: t3.medium # t2.xlarge
     ConstraintDescription: must be a valid EC2 instance type.
   LatestAmiId:
     Description: latest image id for ubuntu
