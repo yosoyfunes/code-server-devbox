@@ -30,8 +30,12 @@ Parameters:
   InstanceType:
     Description: WebServer EC2 instance type
     Type: String
-    Default: t3.small
+    Default: t3.medium
     ConstraintDescription: must be a valid EC2 instance type.
+  RootVolumeSize:
+    Type: Number
+    Default: 15
+    Description: Tamaño del disco raíz en GB
   LatestAmiId:
     Description: latest image id for ubuntu
     Type: "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>" 
@@ -87,14 +91,14 @@ Resources:
   VSCodeServerSecurityGroupIngress:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
-      Description: open port 8080 for the cloudfront prefix list
+      Description: Allow HTTP from CloudFront on port 80
       GroupId: 
         Fn::GetAtt:
           - VSCodeServerSecurityGroup
           - GroupId
       IpProtocol: tcp
-      FromPort: 8080
-      ToPort: 8080
+      FromPort: 80
+      ToPort: 80
       SourcePrefixListId:
         Fn::FindInMap:
           - CloudFrontPrefixListIdMappings
@@ -121,7 +125,7 @@ Resources:
       cfn_nag:
         rules_to_suppress:
           - id: W40
-            reason: allow tcp 8080 from the cloudfront prefix list
+            reason: allow tcp 80 from the cloudfront prefix list
     Properties:
       ImageId: !Ref LatestAmiId
       InstanceType: !Ref InstanceType
@@ -129,6 +133,11 @@ Resources:
       Tags:
         - Key: Name
           Value: VSCodeServer 
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: !Ref RootVolumeSize
+            VolumeType: gp2
       NetworkInterfaces:
         - DeviceIndex: "0"
           AssociatePublicIpAddress: "true"
@@ -147,18 +156,40 @@ Resources:
           Fn::Sub:
             - |
               #!/bin/bash
-              apt update && apt install -y docker.io
-              usermod -aG docker ubuntu
-              newgrp docker
-              docker volume create code-server-data
-              docker run -d \
-                --name code-server \
-                -p 8080:8080 \
-                -e PASSWORD=devcontainer \
-                -v /var/run/docker.sock:/var/run/docker.sock \
-                -v code-server-data:/home/vscode/.local/share/code-server \
-                -w /workspaces/project \
-                yosoyfunes/code-server-devbox:v1 code-server /workspaces/project
+              set -e              
+              
+              # Create AWS config directory
+              mkdir -p /home/ubuntu/.aws
+              
+              # Create AWS config file with region information
+              cat > /home/ubuntu/.aws/config <<EOF
+              [default]
+              output=json
+              region=${AWS::Region}
+              EOF
+              
+              # Create empty credentials file
+              touch /home/ubuntu/.aws/credentials
+              
+              # Set proper ownership
+              chown ubuntu:ubuntu /home/ubuntu/.aws -R
+              
+              # Download setup script
+              wget https://raw.githubusercontent.com/yosoyfunes/code-server-devbox/refs/heads/main/scrips/setup-vscode.sh -O /tmp/setup-vscode.sh
+              chmod +x /tmp/setup-vscode.sh
+              
+              # Set required environment variables              
+              export AWS_DEFAULT_REGION=${AWS::Region}
+              
+              # Execute setup script
+              cd /tmp && ./setup-vscode.sh
+              
+              # Set AWS_DEFAULT_REGION environment variables in /etc/profile
+
+              echo 'export AWS_DEFAULT_REGION=${AWS::Region}' >> /etc/profile
+
+              # Log completion
+              echo "VSCode instance setup completed at $(date)"
             - VERSION: !Ref VSCodeServerVersion
 #------------------------------------------------------
 # CloudFront Cached Policy
@@ -207,7 +238,7 @@ Resources:
           - DomainName: !GetAtt VSCodeServer.PublicDnsName
             Id: !GetAtt VSCodeServer.PublicDnsName
             CustomOriginConfig:
-              HTTPPort: 8080
+              HTTPPort: 80
               OriginProtocolPolicy: http-only
         Enabled: true
         DefaultCacheBehavior:

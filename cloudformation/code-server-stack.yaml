@@ -32,6 +32,10 @@ Parameters:
     Type: String
     Default: t3.medium # t2.xlarge
     ConstraintDescription: must be a valid EC2 instance type.
+  RootVolumeSize:
+    Type: Number
+    Default: 15
+    Description: Tamaño del disco raíz en GB
   LatestAmiId:
     Description: latest image id for ubuntu
     Type: "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>" 
@@ -147,6 +151,11 @@ Resources:
       Tags:
         - Key: Name
           Value: VSCodeServer 
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: !Ref RootVolumeSize
+            VolumeType: gp2
       NetworkInterfaces:
         - DeviceIndex: "0"
           AssociatePublicIpAddress: "true"
