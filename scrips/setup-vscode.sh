@@ -386,8 +386,8 @@ if [ ! -f "/home/ubuntu/.local/share/code-server/User/settings.json" ] || ! grep
   # Create settings file
   cat > /home/ubuntu/.local/share/code-server/User/settings.json <<EOF
 {
-"extensions.autoUpdate": true,
-"extensions.autoCheckUpdates": true,
+"extensions.autoUpdate": false,
+"extensions.autoCheckUpdates": false,
 "terminal.integrated.cwd": "/home/ubuntu/environment",
 "telemetry.telemetryLevel": "off",
 "security.workspace.trust.startupPrompt": "never",
@@ -439,6 +439,16 @@ if ! sudo -u ubuntu --login code-server --list-extensions 2>/dev/null | grep -q 
   EXTENSIONS_UPDATED=true
 else
   log "auto-run-command extension already installed"
+fi
+
+# Check if terraform extension is installed
+if ! sudo -u ubuntu --login code-server --list-extensions 2>/dev/null | grep -q "hashicorp.terraform"; then
+  log "Installing terraform extension..."
+  sudo -u ubuntu --login code-server --install-extension hashicorp.terraform --force
+  sudo -u ubuntu --login code-server --install-extension 4ops.terraform --force
+  EXTENSIONS_UPDATED=true
+else
+  log "terraform extension already installed"
 fi
 
 # Check if Amazon Q extension is installed
