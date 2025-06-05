@@ -160,6 +160,51 @@ else
   log "git-remote-codecommit already installed"
 fi
 
+# Install Terraform if not already installed
+if ! command -v terraform &> /dev/null; then
+  log_error "Terraform is not installed or is outdated, installing..."
+
+  # Check if Terraform keyring already exists
+  if [ ! -f "/usr/share/keyrings/hashicorp-archive-keyring.gpg" ]; then
+    curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+  fi
+    
+  # Check if Terraform repo is already configured
+  if [ ! -f "/etc/apt/sources.list.d/hashicorp.list" ]; then
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list
+  fi
+  
+  apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y terraform
+  log "Terraform installation completed: $(terraform -version 2>&1)"
+else
+  log "Terraform already installed"
+fi
+
+# Install Terragrunt if not already installed
+if ! command -v terragrunt &> /dev/null; then
+  log_error "Terragrunt is not installed or is outdated, installing..."
+
+  ARCH=$(uname -m)
+  TG_ARCH="amd64"  # default
+  [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ] && TG_ARCH="arm64"
+
+  wget -q "https://github.com/gruntwork-io/terragrunt/releases/download/v0.56.3/terragrunt_linux_${TG_ARCH}" -O terragrunt && \
+    chmod +x terragrunt && \
+    mv terragrunt /usr/local/bin/terragrunt
+
+  log "Terragrunt installation completed: $(terragrunt --version 2>&1)"
+else
+  log "Terragrunt already installed"
+fi
+
+# Install LocalStack CLI if not already installed
+if ! command -v localstack &> /dev/null; then
+  log_error "LocalStack is not installed or is outdated, installing..."
+  pip3 install localstack awscli-local
+else
+  log "Terragrunt already installed"
+fi
+
 # Update permissions
 log "Updating permissions..."
 mkdir -p /home/ubuntu/environment
