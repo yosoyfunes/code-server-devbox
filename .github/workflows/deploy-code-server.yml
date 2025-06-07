@@ -6,10 +6,15 @@ on:
       mode:
         description: 'Deployment mode (academy or default)'
         required: true
+        type: choice
+        options:
+          - academy
+          - default
         default: 'default'
       stack_names:
         description: 'Comma-separated list of stack names (e.g., dev1,dev2,dev3)'
         required: true
+        default: 'dev'
 
 jobs:
   deploy:
