@@ -1,0 +1,61 @@
+name: Deploy CodeServer Stacks
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Deployment mode (academy or default)'
+        required: true
+        default: 'default'
+      stack_names:
+        description: 'Comma-separated list of stack names (e.g., dev1,dev2,dev3)'
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: us-east-1
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set Deployment Variables
+        id: vars
+        run: |
+          if [ "${{ github.event.inputs.mode }}" = "academy" ]; then
+            echo "TEMPLATE=cloudformation/AWS_Academy/code-server-stack.yaml" >> $GITHUB_ENV
+            echo "PROFILE_NAME=AWS_ACADEMY" >> $GITHUB_ENV
+          else
+            echo "TEMPLATE=cloudformation/code-server-stack.yaml" >> $GITHUB_ENV
+            echo "PROFILE_NAME=DEFAULT" >> $GITHUB_ENV
+          fi
+
+      - name: Configure AWS credentials
+        if: ${{ github.event.inputs.mode == 'academy' }}
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_ACADEMY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_ACADEMY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Configure AWS credentials
+        if: ${{ github.event.inputs.mode != 'academy' }}
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEFAULT }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEFAULT }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy stacks
+        run: |
+          IFS=',' read -ra STACKS <<< "${{ github.event.inputs.stack_names }}"
+          for STACK in "${STACKS[@]}"; do
+            echo "Deploying stack: $STACK"
+            aws cloudformation deploy \
+              --template-file $TEMPLATE \
+              --stack-name code-server-$STACK \
+              --capabilities CAPABILITY_NAMED_IAM
+          done
