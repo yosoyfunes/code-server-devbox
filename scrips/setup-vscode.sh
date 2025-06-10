@@ -245,19 +245,19 @@ if ! grep -q "PATH=\$PATH:/home/ubuntu/.local/bin" /home/ubuntu/.bashrc; then
 fi
 
 # Add AWS environment variables if not already added
-if ! grep -q "export AWS_REGION=" /home/ubuntu/.bashrc; then
-  log "Adding AWS_REGION to environment..."
-  AWS_REGION=$(aws configure get region 2>/dev/null || echo "${AWS::Region}")
-  echo "export AWS_REGION=$AWS_REGION" >> /home/ubuntu/.bashrc
-  ENV_UPDATED=true
-fi
+#if ! grep -q "export AWS_REGION=" /home/ubuntu/.bashrc; then
+#  log "Adding AWS_REGION to environment..."
+#  AWS_REGION=$(aws configure get region 2>/dev/null || echo "${AWS::Region}")
+#  echo "export AWS_REGION=$AWS_REGION" >> /home/ubuntu/.bashrc
+#  ENV_UPDATED=true
+#fi
 
-if ! grep -q "export AWS_ACCOUNTID=" /home/ubuntu/.bashrc; then
-  log "Adding AWS_ACCOUNTID to environment..."
-  AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text 2>/dev/null || echo "${AWS::AccountId}")
-  echo "export AWS_ACCOUNTID=$AWS_ACCOUNT_ID" >> /home/ubuntu/.bashrc
-  ENV_UPDATED=true
-fi
+#if ! grep -q "export AWS_ACCOUNTID=" /home/ubuntu/.bashrc; then
+#  log "Adding AWS_ACCOUNTID to environment..."
+#  AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text 2>/dev/null || echo "${AWS::AccountId}")
+#  echo "export AWS_ACCOUNTID=$AWS_ACCOUNT_ID" >> /home/ubuntu/.bashrc
+#  ENV_UPDATED=true
+#fi
 
 if ! grep -q "export NEXT_TELEMETRY_DISABLED=1" /home/ubuntu/.bashrc; then
   log "Adding NEXT_TELEMETRY_DISABLED to environment..."
@@ -308,6 +308,7 @@ server {
     listen 80;
     listen [::]:80;
     server_name localhost;
+    
     location ~ ^/(.*) {
         client_max_body_size 512M;
         proxy_pass http://localhost:8080;
@@ -315,13 +316,6 @@ server {
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
-    }
-    location /app {
-    proxy_pass http://localhost:8081/app;
-    proxy_set_header Host \$host;
-    proxy_set_header Upgrade \$http_upgrade;
-    proxy_set_header Connection upgrade;
-    proxy_set_header Accept-Encoding gzip;
     }
 }
 EOF
