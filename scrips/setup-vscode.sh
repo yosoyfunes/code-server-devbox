@@ -405,7 +405,7 @@ if [ ! -f "/home/ubuntu/.local/share/code-server/User/settings.json" ] || ! grep
     "command": "workbench.action.terminal.new"
     }
 ],
-"workbench.colorTheme": "Visual Studio Dark",  
+"workbench.colorTheme": "Default Dark+",  
 "workbench.statusBar.visible": true,
 "window.menuBarVisibility": "classic",
 "remote.autoForwardPorts": false
