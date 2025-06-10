@@ -413,7 +413,8 @@ if [ ! -f "/home/ubuntu/.local/share/code-server/User/settings.json" ] || ! grep
 ],
 "workbench.colorTheme": "Default Dark Modern",
 "workbench.statusBar.visible": true,
-"window.menuBarVisibility": "classic"
+"window.menuBarVisibility": "classic",
+"remote.autoForwardPorts": false
 }
 EOF
   
