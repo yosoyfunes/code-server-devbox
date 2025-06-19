@@ -8,3 +8,10 @@ aws cloudformation create-stack \
  --template-body file://code-server-stack.yaml \
  --capabilities CAPABILITY_NAMED_IAM
 ```
+
+## Delete Stack
+
+```bash
+aws cloudformation delete-stack \
+ --stack-name code-server-stack
+```
