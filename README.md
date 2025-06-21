@@ -78,7 +78,7 @@ docker volume create code-server-data
 docker run -d \
   --name code-server \
   -p 8080:8080 \
-  -e PASSWORD=devcontainer \  
+  -e PASSWORD=devcontainer \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v code-server-data:/home/vscode/.local/share/code-server \
   -w /workspaces/project \
