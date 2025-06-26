@@ -93,6 +93,8 @@ docker run -d \
   --name code-server \
   -p 8080:8080 \
   -e PASSWORD=devcontainer \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v code-server-data:/home/vscode/.local/share/code-server \
   -v "$PWD":/workspaces/project \
   -w /workspaces/project \
   yosoyfunes/code-server-devbox:v1 code-server /workspaces/project
