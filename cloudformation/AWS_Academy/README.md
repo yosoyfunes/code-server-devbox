@@ -26,7 +26,7 @@ Este stack crea una infraestructura completa que incluye:
 ## 🏗 Arquitectura
 
 ```
-Internet → CloudFront → EC2 (Code Server) → Docker Container
+Internet → CloudFront → EC2 (Code Server)
 ```
 
 **Recursos creados:**
